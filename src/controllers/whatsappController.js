@@ -18,7 +18,9 @@ const verifyWebhook = (req, res) => {
 const handleIncomingMessage = async (req, res) => {
   try {
     const body = req.body;
-    if (!body.entry || !body.entry[0].changes[0].value.messages) return res.sendStatus(200);
+    if (!body.entry || !body.entry[0].changes[0].value.messages) {
+      return res.sendStatus(200);
+    }
     const message = body.entry[0].changes[0].value.messages[0];
     if (!message.text) return res.sendStatus(200);
     const userId = message.from;
@@ -26,9 +28,8 @@ const handleIncomingMessage = async (req, res) => {
     const session = sessionService.getSession(userId);
 
     if (session.order.isFirstMessage) {
-      const greeting = `حياك الله! 👋\n\n${restaurantData.greetings.ar}\n\nكيف أقدر أخدمك اليوم؟ 😊`;
       sessionService.updateSession(userId, { order: { isFirstMessage: false } });
-      await sendWhatsAppMessage(userId, greeting);
+      await sendWhatsAppMessage(userId, 'Welcome to Freej Al Ain Restaurant');
       return res.sendStatus(200);
     }
 
@@ -36,7 +37,7 @@ const handleIncomingMessage = async (req, res) => {
     sessionService.updateSession(userId, { message: userText, role: 'user' });
     sessionService.updateSession(userId, { message: aiResponse, role: 'assistant' });
 
-    if (aiResponse.includes('تم استلام طلبك') || aiResponse.includes('received')) {
+    if (aiResponse.includes('received') || aiResponse.includes('order')) {
       await googleSheetsService.logOrderToSheet({ ...session.order, phoneNumber: userId });
       sessionService.resetOrder(userId);
     }
@@ -50,14 +51,14 @@ const handleIncomingMessage = async (req, res) => {
 };
 
 const sendWhatsAppMessage = async (to, text) => {
-  const url = `https://graph.facebook.com/${config.whatsapp.apiVersion}/${config.whatsapp.phoneNumberId}/messages`;
+  const url = 'https://graph.facebook.com/' + config.whatsapp.apiVersion + '/' + config.whatsapp.phoneNumberId + '/messages';
   await axios.post(url, {
     messaging_product: 'whatsapp',
-    to,
+    to: to,
     type: 'text',
     text: { body: text }
   }, {
-    headers: { 'Authorization': `Bearer ${config.whatsapp.accessToken}` }
+    headers: { 'Authorization': 'Bearer ' + config.whatsapp.accessToken }
   });
 };
 
