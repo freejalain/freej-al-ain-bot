@@ -16,6 +16,6 @@ module.exports = {
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
     range: 'Sheet1!A:O',
     clientEmail: process.env.GOOGLE_CLIENT_EMAIL,
-    privateKey: process.env.GOOGLE_PRIVATE_KEY ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined
+    privateKey: process.env.GOOGLE_PRIVATE_KEY
   }
 };
